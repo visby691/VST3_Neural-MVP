@@ -31,7 +31,7 @@ NeuralMVPAudioProcessorEditor::NeuralMVPAudioProcessorEditor(
 
     refreshModelStatus();
     startTimerHz(4);
-    setSize(480, 340);
+    setSize(480, 400);
 }
 
 void NeuralMVPAudioProcessorEditor::paint(juce::Graphics& graphics)
@@ -45,7 +45,8 @@ void NeuralMVPAudioProcessorEditor::paint(juce::Graphics& graphics)
 
 void NeuralMVPAudioProcessorEditor::resized()
 {
-    auto area = getLocalBounds().reduced(20);
+    auto area = getLocalBounds().reduced(16);
+    area.removeFromTop(32);
     loadModelButton.setBounds(area.removeFromTop(36));
     area.removeFromTop(8);
     modelNameLabel.setBounds(area.removeFromTop(24));
