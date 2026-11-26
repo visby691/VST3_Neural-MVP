@@ -10,7 +10,16 @@ FetchContent_Declare(
     GIT_TAG 8.0.6
     GIT_SHALLOW TRUE
 )
+
+set(RTNEURAL_STL ON CACHE BOOL "Use RTNeural with the STL backend")
+FetchContent_Declare(
+    RTNeural
+    GIT_REPOSITORY https://github.com/jatinchowdhury18/RTNeural.git
+    GIT_TAG 95c3c0f987a6fe903e7eec71e797405dbed7caf7
+)
+
 FetchContent_MakeAvailable(JUCE)
+FetchContent_MakeAvailable(RTNeural)
 
 juce_add_plugin(NeuralMVP
     COMPANY_NAME "Visby Audio"
@@ -33,6 +42,7 @@ target_sources(NeuralMVP
     PRIVATE
         Source/PluginProcessor.cpp
         Source/PluginEditor.cpp
+        Source/NeuralEngine.cpp
 )
 
 target_compile_features(NeuralMVP PRIVATE cxx_std_20)
@@ -46,6 +56,7 @@ target_compile_definitions(NeuralMVP
 target_link_libraries(NeuralMVP
     PRIVATE
         juce::juce_audio_utils
+        RTNeural
     PUBLIC
         juce::juce_recommended_config_flags
         juce::juce_recommended_lto_flags
