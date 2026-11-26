@@ -1,6 +1,7 @@
 import json
 import torch
 import torch.nn as nn
+from pathlib import Path
 
 
 class SimpleDistortionNet(nn.Module):
@@ -67,8 +68,12 @@ def main():
 
     print(f"Final MSE Loss: {loss.item():.6f}")
 
-    out_file = "test_distortion.json"
-    export_to_rtneural_json(model, out_file)
+    # スクリプトの1つ上（リポジトリルート）の models/ フォルダを出力先にする
+    out_dir = Path(__file__).resolve().parent.parent / "models"
+    out_dir.mkdir(parents=True, exist_ok=True)
+    out_file = out_dir / "test_distortion.json"
+
+    export_to_rtneural_json(model, str(out_file))
     print(f"Exported: {out_file}")
 
 
