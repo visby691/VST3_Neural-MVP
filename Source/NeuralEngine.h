@@ -18,9 +18,13 @@ public:
 
     // Call from the Message Thread. A failed load leaves the current model intact.
     bool loadModel(const juce::File& modelFile, juce::String& errorMessage);
+    void unloadModel();
 
     // Call periodically from a non-audio thread to release replaced models.
     void collectRetiredModels();
+
+    // Safe to call from a non-audio thread; the audio thread performs the reset.
+    void requestReset() noexcept;
 
     // Processes mono or stereo audio in place; without a loaded model it is a bypass.
     void process(juce::AudioBuffer<float>& audioBuffer) noexcept;
@@ -34,12 +38,15 @@ private:
 
     static_assert(std::atomic<ModelPair*>::is_always_lock_free,
                   "NeuralEngine requires lock-free model pointer operations.");
+    static_assert(std::atomic<bool>::is_always_lock_free,
+                  "NeuralEngine requires lock-free reset flag operations.");
 
     static constexpr int retirementQueueSize = 8;
 
     juce::AbstractFifo retirementFifo { retirementQueueSize };
     std::array<ModelPair*, retirementQueueSize> retiredModels {};
     std::atomic<ModelPair*> pendingModel { nullptr };
+    std::atomic<bool> resetRequested { false };
 
     // Owned and accessed only by the audio thread, except after audio has stopped
     // during destruction.

@@ -127,6 +127,12 @@ bool NeuralEngine::loadModel(const juce::File& modelFile, juce::String& errorMes
     }
 }
 
+void NeuralEngine::unloadModel()
+{
+    auto* unloadedModel = new ModelPair();
+    delete pendingModel.exchange(unloadedModel, std::memory_order_acq_rel);
+}
+
 void NeuralEngine::collectRetiredModels()
 {
     int start1 = 0;
@@ -146,6 +152,14 @@ void NeuralEngine::collectRetiredModels()
 
 void NeuralEngine::process(juce::AudioBuffer<float>& audioBuffer) noexcept
 {
+    if (resetRequested.exchange(false, std::memory_order_acq_rel) && activeModel != nullptr)
+    {
+        if (activeModel->left != nullptr)
+            activeModel->left->reset();
+        if (activeModel->right != nullptr)
+            activeModel->right->reset();
+    }
+
     if (pendingModel.load(std::memory_order_acquire) != nullptr)
     {
         if (activeModel == nullptr)
@@ -180,7 +194,7 @@ void NeuralEngine::process(juce::AudioBuffer<float>& audioBuffer) noexcept
         }
     }
 
-    if (activeModel == nullptr)
+    if (activeModel == nullptr || activeModel->left == nullptr || activeModel->right == nullptr)
         return;
 
     const auto channelCount = juce::jmin(audioBuffer.getNumChannels(), 2);
@@ -194,4 +208,9 @@ void NeuralEngine::process(juce::AudioBuffer<float>& audioBuffer) noexcept
         for (auto sample = 0; sample < sampleCount; ++sample)
             samples[sample] = model->forward(&samples[sample]);
     }
+}
+
+void NeuralEngine::requestReset() noexcept
+{
+    resetRequested.store(true, std::memory_order_release);
 }
